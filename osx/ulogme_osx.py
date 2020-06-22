@@ -45,7 +45,7 @@ class AppDelegate(NSObject):
 
   def writeActiveApp_(self, timer):
     if DEBUG_APP:
-      print 'Got active app callback at %d' % current_time()
+      print ('Got active app callback at %d' % current_time())
     self.event_sniffer.write_active_app()
 
 
@@ -112,7 +112,7 @@ class EventSniffer:
   def event_handler(self, event):
     if event.type() == NSKeyDown:
       if DEBUG_KEYSTROKE:
-        print 'Got keystroke in %s' % self.current_app
+        print ('Got keystroke in %s' % self.current_app)
       with open(options.keystroke_raw_file, 'a') as f:
         f.write('\n')
 
@@ -160,7 +160,7 @@ class EventSniffer:
         self.last_app_logged = name_to_log
         s = '%d %s' % (current_time(), name_to_log)
         if DEBUG_APP:
-          print s
+          print (s)
         # substitute the rewound time to the window file pattern and write
         fname = self.options.active_window_file % (rewindTime(current_time()), )
         with open(fname, 'a') as f:
