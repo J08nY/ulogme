@@ -27,11 +27,11 @@ var d3utils = {};
       div.append('p').attr('class', 'pietitle').text(title);
     }
     
-    var arc = d3.svg.arc()
+    var arc = d3.arc()
       .outerRadius(r)
       .innerRadius(0);
 
-    var pie = d3.layout.pie()
+    var pie = d3.pie()
       .sort(null)
       .value(function(d) { return d.val; });
 
