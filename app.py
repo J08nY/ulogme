@@ -2,7 +2,7 @@
 
 import signal
 import subprocess
-from threading import Thread
+from threading import Thread, Event
 from typing import Optional
 import datetime
 import time
@@ -15,13 +15,21 @@ gi.require_version('Gtk', '3.0')
 gi.require_version('AppIndicator3', '0.1')
 from gi.repository import Gtk as gtk
 from gi.repository import Gio as gio
+from gi.repository import GLib as glib
 from gi.repository import AppIndicator3 as appindicator
+import dbus
+from dbus.mainloop.glib import DBusGMainLoop
 
 from utils import normalize_time, ULogmeServer
 
 
 class WorkerThread(Thread):
     keep_running: bool = True
+    not_screensaver: Event
+    
+    def __init__(self, not_screensaver):
+        super().__init__()
+        self.not_screensaver = not_screensaver
 
     def log(self, content: str):
         now = datetime.datetime.now()
@@ -37,13 +45,18 @@ class WindowLog(WorkerThread):
     def run(self):
         last_title = None
         while self.keep_running:
-            win_num = subprocess.run(["xdotool", "getactivewindow"], stdout=subprocess.PIPE, text=True).stdout[:-1]
-            win_title = subprocess.run(["xdotool", "getwindowname", win_num], stdout=subprocess.PIPE, text=True).stdout[:-1]
-            win_pid = subprocess.run(["xdotool", "getwindowpid", win_num], stdout=subprocess.PIPE, text=True).stdout[:-1]
+            if not self.not_screensaver.is_set():
+                win_title = "__LOCKEDSCREEN"
+            else:
+                win_num = subprocess.run(["xdotool", "getactivewindow"], stdout=subprocess.PIPE, text=True).stdout[:-1]
+                win_title = subprocess.run(["xdotool", "getwindowname", win_num], stdout=subprocess.PIPE, text=True).stdout[:-1]
             if win_title != last_title:
                 self.log(win_title)
             last_title = win_title
-            time.sleep(2)
+            if win_title == "__LOCKEDSCREEN":
+                self.not_screensaver.wait()
+            else:
+                time.sleep(2)
         self.log("")
 
 
@@ -92,10 +105,16 @@ class ULogme(gtk.Application):
     window_log: Optional[WindowLog] = None
     keystroke_log: Optional[KeyStrokeLog] = None
     server: Optional[ULogmeServer] = None
+    not_screensaver: Event
 
-    def __init__(self):
+    def __init__(self, mainloop):
         gtk.Application.__init__(self, application_id="sk.neuromancer.ulogme", flags=gio.ApplicationFlags.FLAGS_NONE)
-        self.set_property("register-session", True)
+        self.mainloop = mainloop
+        self.dbus_mainloop = DBusGMainLoop()
+        self.bus = dbus.SessionBus(mainloop=self.dbus_mainloop)
+        self.bus.add_signal_receiver(self.dbus_screensaver, dbus_interface="org.gnome.ScreenSaver", path="/org/gnome/ScreenSaver", member_keyword="member")
+        self.not_screensaver = Event()
+        self.not_screensaver.set()
         
         self.indicator = appindicator.Indicator.new('ulogme-appindicator', "", appindicator.IndicatorCategory.APPLICATION_STATUS)
         self.indicator.set_icon_full(os.path.abspath("logo_passive.svg"), "Non-recording ulogme.")
@@ -128,11 +147,18 @@ class ULogme(gtk.Application):
     def start(self, *args):
         if not self.running:
             self.indicator.set_status(appindicator.IndicatorStatus.ATTENTION)
-            self.window_log = WindowLog()
+            self.window_log = WindowLog(self.not_screensaver)
             self.window_log.start()
-            self.keystroke_log = KeyStrokeLog()
+            self.keystroke_log = KeyStrokeLog(self.not_screensaver)
             self.keystroke_log.start()
             self.running = True
+
+    def dbus_screensaver(self, *args, member=None):
+        if member == "ActiveChanged":
+            if args[0]:
+                self.not_screensaver.clear()
+            else:
+                self.not_screensaver.set()
 
     def toggle_server(self, *args):
         if self.server is None:
@@ -159,10 +185,11 @@ class ULogme(gtk.Application):
             self.server.terminate()
             self.server.join()
             self.server.close()
-        gtk.main_quit()
+        self.mainloop.quit()
 
 
 if __name__ == "__main__":
-    app = ULogme()
+    mainloop = glib.MainLoop()
+    app = ULogme(mainloop=mainloop)
     app.run(sys.argv)
-    gtk.main()
+    mainloop.run()
