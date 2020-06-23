@@ -141,6 +141,8 @@ class ULogme(gtk.Application):
             self.item_toggle_serve.set_label("Stop server")
         else:
             self.server.terminate()
+            self.server.join()
+            self.server.close()
             self.server = None
             self.item_toggle_serve.set_label("Start server")
 
@@ -153,6 +155,10 @@ class ULogme(gtk.Application):
 
     def quit(self, *args):
         self.stop()
+        if self.server is not None:
+            self.server.terminate()
+            self.server.join()
+            self.server.close()
         gtk.main_quit()
 
 
