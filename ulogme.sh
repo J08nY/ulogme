@@ -5,7 +5,9 @@ if [ "$(uname)" == "Darwin" ]; then
   ./osx/run_ulogme_osx.sh
 else
   # Assume Linux
-  sudo echo -n ""
   sudo ./keyfreq.sh &
+  kf=$!
+  echo $kf
+  trap "sudo kill -9 $kf" INT
   ./logactivewin.sh
 fi

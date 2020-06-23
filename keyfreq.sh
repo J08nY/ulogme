@@ -18,7 +18,9 @@ do
   
   # work in windows of 9 seconds 
   sleep 9
-  kill $PID
+  if ! kill $PID; then
+  	break
+  fi
   
   # count number of key release events
   num=$(cat $helperfile | grep release | wc -l)

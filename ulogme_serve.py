@@ -69,7 +69,7 @@ class CustomHandler(http.server.SimpleHTTPRequestHandler):
 
 httpd = socketserver.ThreadingTCPServer((IP, PORT), CustomHandler)
 
-print ('Serving ulogme, see it on http://localhost:' + str(PORT))
+print ('Serving ulogme, see it on http://ulogme.localhost:' + str(PORT))
 try:
     httpd.serve_forever()
 except KeyboardInterrupt:
