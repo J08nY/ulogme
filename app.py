@@ -17,7 +17,7 @@ from gi.repository import Gtk as gtk
 from gi.repository import Gio as gio
 from gi.repository import AppIndicator3 as appindicator
 
-from utils import normalize_time
+from utils import normalize_time, ULogmeServer
 
 
 class WorkerThread(Thread):
@@ -89,8 +89,9 @@ class ULogme(gtk.Application):
     indicator: appindicator.Indicator
     menu: gtk.Menu
     running: bool = False
-    window_log: Optional[WindowLog]
-    keystroke_log: Optional[KeyStrokeLog]
+    window_log: Optional[WindowLog] = None
+    keystroke_log: Optional[KeyStrokeLog] = None
+    server: Optional[ULogmeServer] = None
 
     def __init__(self):
         gtk.Application.__init__(self, application_id="sk.neuromancer.ulogme", flags=gio.ApplicationFlags.FLAGS_NONE)
@@ -108,8 +109,12 @@ class ULogme(gtk.Application):
         item_stop.connect("activate", self.stop)
         item_quit = gtk.MenuItem(label="Quit")
         item_quit.connect("activate", self.quit)
+        self.item_toggle_serve = gtk.MenuItem(label="Start server")
+        self.item_toggle_serve.connect("activate", self.toggle_server)
         self.menu.append(item_start)
         self.menu.append(item_stop)
+        self.menu.append(gtk.SeparatorMenuItem())
+        self.menu.append(self.item_toggle_serve)
         self.menu.append(gtk.SeparatorMenuItem())
         self.menu.append(item_quit)
         self.menu.show_all()
@@ -128,6 +133,16 @@ class ULogme(gtk.Application):
             self.keystroke_log = KeyStrokeLog()
             self.keystroke_log.start()
             self.running = True
+
+    def toggle_server(self, *args):
+        if self.server is None:
+            self.server = ULogmeServer("", 8124)
+            self.server.start()
+            self.item_toggle_serve.set_label("Stop server")
+        else:
+            self.server.terminate()
+            self.server = None
+            self.item_toggle_serve.set_label("Start server")
 
     def stop(self, *args):
         if self.running:
