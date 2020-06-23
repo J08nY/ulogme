@@ -156,6 +156,7 @@
       if(es.length === 0) return; // nothing to do here...
 
       var coffees = [];
+      var edrinks = [];
       var dts= [];
       for(var i=0,N=es.length;i<N;i++) {
         var e = es[i];
@@ -164,7 +165,11 @@
         d.s = e.s;
         if(e.s.indexOf("coffee")>-1) {
           // we had coffee
-          coffees.push(e.t-t00);
+          coffees.push({time:e.t-t00,type:"coffee"});
+        }
+        if(e.s.indexOf("edrink")>-1 || e.s.indexOf("energy drink")>-1) {
+          // we had an energy drink
+          coffees.push({time:e.t-t00,type:"edrink"});
         }
         dts.push(d);
       }
@@ -184,14 +189,21 @@
       if(draw_coffee) {
         var coffex = [];
         var nc = coffees.length;
-        var alpha = Math.log(2)/20520; // 20,520 is half life of coffee, in seconds. Roughly 6 hours
+        var alpha = {
+			coffee: Math.log(2)/20520, // 20,520 is half life of coffee, in seconds. Roughly 6 hours
+			edrink: Math.log(2)/14400
+		};
+		var caf_amount = {
+			coffee: 30,
+			edrink: 20
+		}
         for(var i=0;i<100;i++) {
           there = i*(ft-t00)/100.0;
           // coffee is assumed to add linearly in the body
           var amount = 0;
           for(var j=0;j<nc;j++) {
-            if(there > coffees[j]) {
-              amount += Math.exp(-alpha*(there - coffees[j]));
+            if(there > coffees[j].time) {
+              amount += Math.exp(-alpha[coffees[j].type]*(there - coffees[j].time));
             }
           }
           coffex.push({t:there, a:30*amount}); // scale is roughly 30px = 150mg coffee, for now

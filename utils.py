@@ -1,0 +1,126 @@
+import time
+import datetime
+import json
+import os
+import os.path
+import sys
+import glob
+
+from typing import Optional
+import datetime
+
+
+def normalize_time(dt: Optional[datetime.datetime] = None):
+    if dt is None:
+        dt = datetime.datetime.now()
+    d = datetime.datetime(dt.year, dt.month, dt.day, 7)
+    if dt.hour < 7:
+        d -= datetime.timedelta(days=1)
+    return d
+
+def load_events(fname):
+    """
+    Reads a file that consists of first column of unix timestamps
+    followed by arbitrary string, one per line. Outputs as dictionary.
+    Also keeps track of min and max time seen in global mint,maxt
+    """
+    events = []
+
+    try:
+        with open(fname, 'r') as f:
+            ws = f.read().splitlines()
+        events = []
+        for w in ws:
+            ix = w.find(' ') # find first space, that's where stamp ends
+            stamp = int(w[:ix])
+            s = w[ix+1:]
+            events.append({'t':stamp, 's':s})
+    except Exception as e:
+        print('%s probably does not exist, setting empty events list.' % (fname, ))
+        print('error was:')
+        print(e)
+    return events
+
+def mtime(f):
+    """
+    return time file was last modified, or 0 if it doesnt exist
+    """
+    if os.path.isfile(f):
+        return int(os.path.getmtime(f))
+    else:
+        return 0
+
+def update_events(log_dir, out_dir):
+    """
+    goes down the list of .txt log files and writes all .json
+    files that can be used by the frontend
+    """
+    L = []
+    L.extend(glob.glob(os.path.join(log_dir, "keyfreq_*.txt")))
+    L.extend(glob.glob(os.path.join(log_dir, "window_*.txt")))
+    L.extend(glob.glob(os.path.join(log_dir, "notes_*.txt")))
+
+    # extract all times. all log files of form {type}_{stamp}.txt
+    print(L)
+    ts = [int(x[x.find('_')+1:x.find('.txt')]) for x in L]
+    ts = list(set(ts))
+    ts.sort()
+
+    mint = min(ts)
+    maxt = max(ts)
+
+    # march from beginning to end, group events for each day and write json
+    t = mint
+    out_list = []
+    for t in ts:
+        t0 = t
+        t1 = t0 + 60*60*24 # 24 hrs later
+        fout = 'events_%d.json' % (t0, )
+        out_list.append({'t0':t0, 't1':t1, 'fname': fout})
+
+        fwrite = os.path.join(out_dir, fout)
+        e1f = os.path.join(log_dir, 'window_%d.txt' % (t0, ))
+        e2f = os.path.join(log_dir, 'keyfreq_%d.txt' % (t0, ))
+        e3f = os.path.join(log_dir, 'notes_%d.txt' % (t0, ))
+        e4f = os.path.join(log_dir, 'blog_%d.txt' % (t0, ))
+
+        dowrite = False
+
+        # output file already exists?
+        # if the log files have not changed there is no need to regen
+        if os.path.isfile(fwrite):
+            tmod = mtime(fwrite)
+            e1mod = mtime(e1f)
+            e2mod = mtime(e2f)
+            e3mod = mtime(e3f)
+            e4mod = mtime(e4f)
+            if e1mod > tmod or e2mod > tmod or e3mod > tmod or e4mod > tmod:
+                dowrite = True # better update!
+                print('a log file has changed, so will update %s' % (fwrite, ))
+        else:
+            # output file doesnt exist, so write.
+            dowrite = True
+
+        if dowrite:
+            # okay lets do work
+            e1 = load_events(e1f)
+            e2 = load_events(e2f)
+            e3 = load_events(e3f)
+            for k in e2: k['s'] = int(k['s']) # int convert
+            print(e1f, e2f, e3f)
+
+            e4 = ''
+            if os.path.isfile(e4f):
+                with open(e4f, 'r') as f:
+                    e4 = f.read()
+
+            eout = {'window_events': e1, 'keyfreq_events': e2, 'notes_events': e3, 'blog': e4}
+            with open(fwrite, 'w') as f:
+                f.write(json.dumps(eout))
+            print('wrote ' + fwrite)
+
+    #outside for loop
+    fwrite = os.path.join(out_dir, 'export_list.json')
+    with open(fwrite, 'w') as f:
+        f.write(json.dumps(out_list))
+    print('wrote ' + fwrite)

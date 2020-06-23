@@ -1,0 +1,65 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<svg
+   xmlns:dc="http://purl.org/dc/elements/1.1/"
+   xmlns:cc="http://creativecommons.org/ns#"
+   xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+   xmlns:svg="http://www.w3.org/2000/svg"
+   xmlns="http://www.w3.org/2000/svg"
+   id="svg8"
+   version="1.1"
+   viewBox="0 0 210 297"
+   height="297mm"
+   width="210mm">
+  <defs
+     id="defs2" />
+  <metadata
+     id="metadata5">
+    <rdf:RDF>
+      <cc:Work
+         rdf:about="">
+        <dc:format>image/svg+xml</dc:format>
+        <dc:type
+           rdf:resource="http://purl.org/dc/dcmitype/StillImage" />
+        <dc:title></dc:title>
+      </cc:Work>
+    </rdf:RDF>
+  </metadata>
+  <g
+     id="layer1">
+    <rect
+       y="12.863132"
+       x="49.186161"
+       height="51.041386"
+       width="60.697594"
+       id="rect873"
+       style="fill:#666666;stroke:#ffffff;stroke-width:0.264999;stroke-linecap:round;paint-order:markers stroke fill" />
+    <text
+       transform="scale(-1,1)"
+       id="text835"
+       y="38.880688"
+       x="-65.157318"
+       style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:12.6987px;line-height:1.25;font-family:'Noto Sans';-inkscape-font-specification:'Noto Sans';text-align:center;letter-spacing:0px;word-spacing:0px;text-anchor:middle;fill:#ffffff;fill-opacity:1;stroke:none;stroke-width:0.264583"
+       xml:space="preserve"><tspan
+         style="font-style:normal;font-variant:normal;font-weight:900;font-stretch:normal;font-family:Raleway;-inkscape-font-specification:'Raleway Heavy';writing-mode:lr-tb;fill:#ffffff;stroke-width:0.264583"
+         y="38.880688"
+         x="-65.157318"
+         id="tspan833">u</tspan></text>
+    <text
+       xml:space="preserve"
+       style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:12.6987px;line-height:1.25;font-family:'Noto Sans';-inkscape-font-specification:'Noto Sans';text-align:center;letter-spacing:0px;word-spacing:0px;text-anchor:middle;fill:#ffffff;fill-opacity:1;stroke:none;stroke-width:0.264583"
+       x="-92.8358"
+       y="39.154259"
+       id="text835-2"
+       transform="scale(-1,1)"><tspan
+         id="tspan833-8"
+         x="-92.8358"
+         y="39.154259"
+         style="font-style:normal;font-variant:normal;font-weight:900;font-stretch:normal;font-family:Raleway;-inkscape-font-specification:'Raleway Heavy';writing-mode:lr-tb;fill:#ffffff;stroke-width:0.264583">u</tspan></text>
+    <circle
+       r="7.3840923"
+       cy="35.926056"
+       cx="92.818779"
+       id="path893"
+       style="fill:none;stroke:#ffffff;stroke-width:1.465;stroke-linecap:round;stroke-miterlimit:4;stroke-dasharray:none;paint-order:markers stroke fill" />
+  </g>
+</svg>
