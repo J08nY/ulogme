@@ -65,7 +65,7 @@ def update_events(log_dir, out_dir):
     L.extend(glob.glob(os.path.join(log_dir, "notes_*.txt")))
 
     # extract all times. all log files of form {type}_{stamp}.txt
-    # print(L)
+    #print(L)
     ts = [int(x[x.find('_')+1:x.find('.txt')]) for x in L]
     ts = list(set(ts))
     ts.sort()
@@ -119,13 +119,13 @@ def update_events(log_dir, out_dir):
             eout = {'window_events': e1, 'keyfreq_events': e2, 'notes_events': e3, 'blog': e4}
             with open(fwrite, 'w') as f:
                 f.write(json.dumps(eout))
-            # print('wrote ' + fwrite)
+            #print('wrote ' + fwrite)
 
     #outside for loop
     fwrite = os.path.join(out_dir, 'export_list.json')
     with open(fwrite, 'w') as f:
         f.write(json.dumps(out_list))
-    # print('wrote ' + fwrite)
+    #print('wrote ' + fwrite)
 
 
 class CustomHandler(http.server.SimpleHTTPRequestHandler):
@@ -147,10 +147,10 @@ class CustomHandler(http.server.SimpleHTTPRequestHandler):
             # add note at specified time and refresh
             note = form.getvalue('note')
             note_time = int(form.getvalue('time'))
-            dt = datetime.datetime.strptime(note_time, "%s")
-            note_file = "../logs/notes_{}.txt".format(normalize_time(dt).strftime("%s"))
+            dt = datetime.datetime.fromtimestamp(note_time)
+            note_file = "../logs/notes_{}.txt".format(int(normalize_time(dt).timestamp()))
             with open(note_file, "a") as f:
-                f.write(dt.strftime("%s") + " " + note)
+                f.write(dt.strftime("%s") + " " + note + "\n")
             update_events("../logs", ".")
             result = 'OK'
 
@@ -160,8 +160,8 @@ class CustomHandler(http.server.SimpleHTTPRequestHandler):
             if post is None: 
                 post = ''
             post_time = int(form.getvalue('time'))
-            dt = datetime.datetime.strptime(post_time, "%s")
-            blog_file = "../logs/blog_{}.txt".format(normalize_time(dt).strftime("%s")) 
+            dt = datetime.datetime.fromtimestamp(post_time)
+            blog_file = "../logs/blog_{}.txt".format(int(normalize_time(dt).timestamp()))
             with open(blog_file, 'w') as f:
                 f.write(post)
             update_events("../logs", ".") # defined in export_events.py

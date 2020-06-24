@@ -470,7 +470,7 @@
 
         startSpinner();
         $.post("/addnote",
-          {"note": $("#notetext").val(), "time": clicktime},
+          {"note": $("#notetext").val(), "time": Math.round(clicktime).toString()},
           function(data,status){
             console.log("Data: " + data + "\nStatus: " + status);
             stopSpinner();
