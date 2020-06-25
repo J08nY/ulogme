@@ -22,10 +22,10 @@
 
     var skipdraw = {}; // global...
     function drawEvents() {
-      $("#content").empty();
+      $("#content-time").empty();
 
       // draw the legend on top of the svg
-      var d3div = d3.select("#content");
+      var d3div = d3.select("#content-time");
       var ldiv = d3div.append("div").attr('class', 'legenddiv');
 
       for(var i=0;i<etypes.length;i++) {
@@ -119,7 +119,8 @@
           if(skipdraw[m]) continue; // skip!
           dtimes.push({
             val: edur[k].hasOwnProperty(m) ? edur[k][m] : 0,
-            col: color_hash[m]
+            col: color_hash[m],
+            name: m
           });
         }
 
@@ -140,7 +141,121 @@
           .attr("height", function(d) { return d.val * yscale; })
           .attr("x", margin.left + k * dsz)
           .attr("y", function(d) { gh += d.val; return height + margin.top - gh * yscale; })
-          .attr("fill", function(d) { return d.col; } );
+          .attr("fill", function(d) { return d.col; } )
+          .append("svg:title")
+          .text(function(d) { return d.name; });
+      }
+
+
+      $("#content-keys").empty();
+      
+      // draw the legend on top of the svg
+      d3div = d3.select("#content-keys");
+      ldiv = d3div.append("div").attr('class', 'legenddiv');
+
+      for(i=0;i<etypes.length;i++) {
+        var pi = ldiv.append('p').text(etypes[i]).attr('style', 'color:' + color_hash[etypes[i]]);
+
+        var m = etypes[i];
+        if(skipdraw[m]) { pi.attr('class', 'skipdrawyes'); }
+        else { pi.attr('class', 'skipdrawno'); }
+
+        pi.on('click', function(i) { // close over index i
+          return function() {
+            // toggle whether this one gets drawn
+            var m = etypes[i];
+            if(skipdraw[m] === false) { skipdraw[m] = true; }
+            else { skipdraw[m] = false; }
+            drawEvents(); // and redraw the graph!
+          }
+        }(i));
+      }
+      svg = d3div.append("svg")
+              .attr("width", width + margin.left + margin.right)
+              .attr("height", height + margin.top + margin.bottom)
+
+      // draw y axis labels
+      var yoff = 0;
+      var yn = 0;
+      while(yoff < height) {
+
+        var yy = (height + margin.top - yoff);
+
+        svg.append("line")
+          .attr("x1", 0)
+          .attr("x2", width + margin.left)
+          .attr("y1", yy)
+          .attr("y2", yy)
+          .attr("stroke", "#EEE")
+          .attr("stroke-width", 1);
+
+        yn++;
+        yoff += 3600 * yscale;
+      }
+      // draw x axis labels
+      var N = edur.length;
+      var dsz = width / N;
+      svg.selectAll('.xlabel')
+        .data(event_list)
+      .enter()
+        .append("text")
+        .attr("transform", function(d, i) {
+          var x = margin.left + i * dsz;
+          var y = height + margin.top + 3;
+          return "translate(" + x + "," + y + ")rotate(90)";})
+        .attr("fill", "#333")
+        .attr("font-family", "arial")
+        .attr("font-size", "14px")
+        .text(function(d) { var dobj = new Date(d.t0 * 1000); return ppDateShort(dobj); })
+      // draw vertical lines at week boundaries for easier visual consumption
+      svg.selectAll('.yd')
+        .data(event_list)
+      .enter()
+        .append("line")
+        .attr("stroke", function(d) { 
+          var dobj = new Date(d.t0 * 1000); 
+          var isMonday = dobj.getDay() === 1;
+          return isMonday ? "#BBB" : "#EEE"
+        })
+        .attr('x1', function(d, i) { return margin.left + i * dsz; })
+        .attr('x2', function(d, i) { return margin.left + i * dsz; })
+        .attr('y1', height + margin.top)
+        .attr('y2', margin.top);
+
+       // draw the data
+      for(var k=0;k<N;k++) {
+        // convert from kv to list
+        var dtimes = [];
+        for(var i=0;i<etypes.length;i++) {
+          var m = etypes[i];
+          if(skipdraw[m]) continue; // skip!
+          dtimes.push({
+            val: key_stats_all[k].hasOwnProperty(m) ? edur[k][m] : 0,
+            col: color_hash[m],
+            name: m
+          });
+        }
+
+        svgg = svg.append('g')
+          .attr("style", "cursor:pointer;")
+          .on("click", function(q){ 
+            return function(){
+              window.location.href = 'index.html?gotoday=' + q;
+            };
+          }(k)); // have to closure k
+
+        var gh = 0;
+        svgg.selectAll(".day"+k)
+          .data(dtimes)
+        .enter()
+          .append("rect")
+          .attr("width", dsz)
+          .attr("height", function(d) { return d.val * yscale; })
+          .attr("x", margin.left + k * dsz)
+          .attr("y", function(d) { gh += d.val; return height + margin.top - gh * yscale; })
+          .attr("fill", function(d) { return d.col; } )
+          .append("svg:title")
+          .text(function(d) { return d.name; });
       }
     }
 
@@ -356,9 +471,9 @@
       }).then(function() {
         
         analyzeEvents(); // all events have been loaded. Analyze!
+        key_stats_all = mergeWindowKeyEvents();
         drawEvents(); // and d3js draw!
         
-        key_stats_all = mergeWindowKeyEvents();
         visualizeKeySummary(key_stats_all);
         visualizeTimeSummary(edur);
 
@@ -483,7 +598,9 @@
       <div id="graphopts">
       </div>
       <h2>Total amount of time per day</h2>
-      <div id="content"></div>
+      <div id="content-time"></div>
+      <h2>Total amount of keys per day</h2>
+      <div id="content-keys"></div>
       <h2>Per-window summaries</h2>
       <div id="summaries">
         <div id="keysummary"></div>
