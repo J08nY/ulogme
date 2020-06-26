@@ -27,6 +27,11 @@
       // draw the legend on top of the svg
       var d3div = d3.select("#content-time");
       var ldiv = d3div.append("div").attr('class', 'legenddiv');
+      var toggle = ldiv.append("button").text("Toggle").attr("style", "color: white; background-color: #F55; border: none");
+      toggle.on("click", function() {
+      	_.forEach(etypes, (e) => {skipdraw[e] = !skipdraw[e];});
+      	drawEvents();
+      });
 
       for(var i=0;i<etypes.length;i++) {
         var pi = ldiv.append('p').text(etypes[i]).attr('style', 'color:' + color_hash[etypes[i]]);
@@ -46,7 +51,7 @@
         }(i));
       }
 
-      var margin = {top: 10, right: 10, bottom: 100, left: 40};
+      var margin = {top: 10, right: 10, bottom: 100, left: 60};
       var fullwidth = 1200;
       var fullheight = 800;
       var width = fullwidth - margin.left - margin.right;
@@ -152,6 +157,11 @@
       // draw the legend on top of the svg
       d3div = d3.select("#content-keys");
       ldiv = d3div.append("div").attr('class', 'legenddiv');
+      toggle = ldiv.append("button").text("Toggle").attr("style", "color: white; background-color: #F55; border: none");
+      toggle.on("click", function() {
+      	_.forEach(etypes, (e) => {skipdraw[e] = !skipdraw[e];});
+      	drawEvents();
+      });
 
       for(i=0;i<etypes.length;i++) {
         var pi = ldiv.append('p').text(etypes[i]).attr('style', 'color:' + color_hash[etypes[i]]);
@@ -180,6 +190,9 @@
       while(yoff < height) {
 
         var yy = (height + margin.top - yoff);
+        svg.append("text")
+          .attr("transform", "translate(-1," + (yy-3) + ")")
+          .text(Math.round(yoff * 130));
 
         svg.append("line")
           .attr("x1", 0)
@@ -230,7 +243,7 @@
           var m = etypes[i];
           if(skipdraw[m]) continue; // skip!
           dtimes.push({
-            val: key_stats_all[k].hasOwnProperty(m) ? edur[k][m] : 0,
+            val: key_stats_all[k].hasOwnProperty(m) ? key_stats_all[k][m].f : 0,
             col: color_hash[m],
             name: m
           });
