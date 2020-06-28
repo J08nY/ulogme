@@ -38,9 +38,7 @@ def load_events(fname):
             s = w[ix+1:]
             events.append({'t':stamp, 's':s})
     except Exception as e:
-        print('%s probably does not exist, setting empty events list.' % (fname, ))
-        print('error was:')
-        print(e)
+        pass
     return events
 
 
